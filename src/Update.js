@@ -1,54 +1,106 @@
-import {React, useState} from "react";
-import './App.css';
+import React, { useState, useEffect } from 'react';
 
-export const Update = () => {
+function Update() {
+  const [users, setUsers] = useState([]);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editUser, setEditUser] = useState({});
 
-    const [firstName, setFirstName] = useState("")
-    const [lastName, setLastName] = useState("")
-    const [age, setAge] = useState("")
+  useEffect(() => {
+    fetch('https://fakestoreapi.com/products')
+      .then((response) => response.json())
+      .then((data) => setUsers(data));
+  }, []);
 
-    interface FormDataType {firstName:string, lastName: string, age: string}
-    const responseBody: FormDataType = {firstName: "", lastName: "", age: "0"}
+  const handleEdit = (index) => {
+    setEditIndex(index);
+    setEditUser(users[index]);
+  };
 
-    const onSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        responseBody.firstName = firstName
-        responseBody.lastName = lastName
-        responseBody.age = age
-        console.log(JSON.stringify(responseBody))
+  const handleUpdate = () => {
+    const updatedUsers = [...users];
+    updatedUsers[editIndex] = editUser;
 
-        fetch('https://fakestoreapi.com/products',{
-            method:"POST",
-            body:JSON.stringify(
-                {
-                    title: 'test product',
-                    price: 13.5,
-                    description: 'lorem ipsum set',
-                    image: 'https://i.pravatar.cc',
-                    category: 'electronic'
-                }
-            )
-        })
-            .then(res=>res.json())
-            .then(responseBody=>console.log(responseBody))
-	//Form submission happens here
-    }
-    const inputChangeHandler = (setFunction: React.Dispatch<React.SetStateAction<string>>, event: React.ChangeEvent<HTMLInputElement>) => {
-        setFunction(event.target.value)
-    }
+    fetch(`https://fakestoreapi.com/products/${editUser.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(editUser),
+      headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+      },
+      })
+      .then((response) => response.json())
+      .then(() => {
+          // Atualiza o estado dos usuários com o array atualizado
+          setUsers(updatedUsers);
+          // Limpa o índice de edição e o usuário em edição
+          setEditIndex(null);
+          setEditUser({});
+      });
+  };
 
-    return(
-        <form onSubmit={onSubmitHandler}>
-            <div><label htmlFor="first_name">First Name</label></div>
-            <div><input id="first_name" onChange={(e)=>inputChangeHandler(setFirstName, e)} type="text"/></div>
-            <div><label htmlFor="last_name">Last Name</label></div>
-            <div><input id="last_name" onChange={(e)=>inputChangeHandler(setLastName, e)} type="text"/></div>
-            <div><label htmlFor="age">Age</label></div>
-            <div><input id="age" onChange={(e)=>inputChangeHandler(setAge, e)} type="number"/></div>
-            <input type="submit"/>
-        </form>
-    )
-
+  return (
+    <div>
+      <h1>User List</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Tile</th>
+            <th>Price</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user, index) => (
+            <tr key={user.id}>
+              {editIndex === index ? (
+                <>
+                  <td>
+                    <input
+                      type="text"
+                      value={editUser.title}
+                      onChange={(e) =>
+                        setEditUser({ ...editUser, title: e.target.value })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={editUser.price}
+                      onChange={(e) =>
+                        setEditUser({ ...editUser, price: e.target.value })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={editUser.description}
+                      onChange={(e) =>
+                        setEditUser({ ...editUser, description: e.target.value })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <button onClick={handleUpdate}>Update</button>
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td>{user.title}</td>
+                  <td>{user.price}</td>
+                  <td>{user.description}</td>
+                  <td>
+                    <button onClick={() => handleEdit(index)}>Edit</button>
+                  </td>
+                </>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export default Update;

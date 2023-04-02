@@ -1,52 +1,43 @@
-import React from "react";
-import './App.css';
-import Update from './Update';
-import { Route, BrowserRouter } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
 
-class Delete extends React.Component {
+function App() {
+  const [products, setProducts] = useState([]);
+  const [editedProduct, setEditedProduct] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
 
-    // Constructor
-    constructor(props) {
-        super(props);
+  useEffect(() => {
+    fetch('https://fakestoreapi.com/products/')
+      .then((response) => response.json())
+      .then((data) => setProducts(data));
+  }, []);
 
-        this.state = {
-            items: [],
-            DataisLoaded: false
-        };
-    }
+  const handleDelete = (index) => {
+    const productId = products[index].id;
 
-    componentDidMount() {
-        fetch(`https://fakestoreapi.com/carts/${this.props.match.params.id}`,{
-            method:"DELETE"
-        })
-            .then(res=>res.json())
-            .then(json=>console.log(json))
-    }
-    render() {
-        const { DataisLoaded, items } = this.state;
-        if (!DataisLoaded) return <div>
-            <h1> Pleses wait some time.... </h1> </div> ;
+    fetch(`https://fakestoreapi.com/products/${productId}`, {
+      method: 'DELETE'
+    })
+      .then((response) => response.json())
+      .then(() => {
+        setProducts(products.filter((product) => product.id !== productId));
+      });
+  };
 
-        return (
-        <div>{
-                items.map((item) => (
-                    <ol key = { item.id } >
-                        User_Name: { item.username },
-                        Full_Name: { item.name },
-                        User_Email: { item.email },
-                        ID: {item.id}
-                        <a href={`update/${item.id}`}>oi</a>
-                        <a href={`delete/${item.id}`}>oi</a>
-                        <BrowserRouter>
-                            <Route element = { <Update/> } exact path="update/:item.id" />
-                            <Route element = { <Delete/> } exact path="delete/:item.id" />
-                        </BrowserRouter>
-                    </ol>
-                ))
-            }
-        </div>
-    );
-}
+  return (
+    <div className="App">
+      <h1>Product List</h1>
+      <ul>
+        {products.map((product, index) => (
+          <li key={product.id}>
+            <p>{product.title}</p>
+            <p>{product.price}</p>
+            <p>{product.description}</p>
+            <button onClick={() => handleDelete(index)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default Delete;
+export default App;

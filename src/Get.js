@@ -1,56 +1,24 @@
-import React from "react";
-import './App.css';
-import Update from './Update';
-import Delete from './Delete';
-import { Route, BrowserRouter } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
 
-class Get extends React.Component {
+function Get() {
+  const [products, setProducts] = useState([]);
 
-    // Constructor
-    constructor(props) {
-        super(props);
+  useEffect(() => {
+    fetch('https://fakestoreapi.com/products')
+      .then(res => res.json())
+      .then(json => setProducts(json));
+  }, []);
 
-        this.state = {
-            items: [],
-            DataisLoaded: false
-        };
-    }
-
-    componentDidMount() {
-        fetch('https://fakestoreapi.com/products')
-            .then((res) => res.json())
-            .then((json) => {
-                this.setState({
-                    items: json,
-                    DataisLoaded: true
-                });
-            })
-    }
-    render() {
-        const { DataisLoaded, items } = this.state;
-        if (!DataisLoaded) return <div>
-            <h1> Pleses wait some time.... </h1> </div> ;
-
-        return (
-        <div>{
-                items.map((item) => (
-                    <ol key = { item.id } >
-                        User_Name: { item.username },
-                        Full_Name: { item.name },
-                        User_Email: { item.email },
-                        ID: {item.id}
-                        <a href={`update/${item.id}`}>Editar</a>,
-                        <a href={`delete/${item.id}`}>Deletar</a>
-                        <BrowserRouter>
-                            <Route element = { <Update/> } exact path="update/:item.id" />
-                            <Route element = { <Delete/> } exact path="delete/:item.id" />
-                        </BrowserRouter>
-                    </ol>
-                ))
-            }
-        </div>
-    );
-}
+  return (
+    <div>
+      <h2>List Products</h2>
+      <ul>
+        {products.map(product => (
+          <li key={product.id}>{product.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default Get;
